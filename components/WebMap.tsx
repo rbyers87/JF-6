@@ -1,58 +1,50 @@
-import { useEffect } from 'react';
-import { View } from 'react-native';
-import dynamic from 'next/dynamic';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { MapView, Marker, Polygon } from 'expo-maps';
 
-const LeafletMap = dynamic(
-  () => {
-    const L = require('leaflet');
-    // Fix leaflet icons
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
-
-    const { MapContainer, TileLayer, Marker, Polygon } = require('react-leaflet');
-    
-    return function Map({ location, jurisdictions }) {
-      useEffect(() => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-        return () => document.head.removeChild(link);
-      }, []);
-
-      return (
-        <MapContainer
-          center={[location.latitude, location.longitude]}
-          zoom={13}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={[location.latitude, location.longitude]} />
-          {jurisdictions.map((jur) => (
-            jur.boundary?.length > 0 && (
-              <Polygon
-                key={jur.id}
-                positions={jur.boundary.map(coord => [coord[1], coord[0]])}
-              />
-            )
-          ))}
-        </MapContainer>
-      );
-    };
-  },
-  { ssr: false }
-);
-
-export function WebMap({ location, jurisdictions }) {
+export default function WebMap({ 
+  location, 
+  jurisdictions 
+}: { 
+  location: { latitude: number; longitude: number }, 
+  jurisdictions: any[] 
+}) {
   return (
-    <View style={{ flex: 1 }}>
-      <LeafletMap location={location} jurisdictions={jurisdictions} />
+    <View style={styles.container}>
+      <MapView 
+        style={styles.map}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        <Marker 
+          coordinate={location} 
+          title="Your Location" 
+          pinColor="#1e40af"
+        />
+        {jurisdictions.map((jur) => (
+          jur.boundary && jur.boundary.length > 0 && (
+            <Polygon
+              key={jur.id}
+              coordinates={jur.boundary.map(coord => ({
+                latitude: coord[1],
+                longitude: coord[0]
+              }))}
+              fillColor="rgba(30, 64, 175, 0.3)"
+              strokeColor="rgba(30, 64, 175, 0.8)"
+              strokeWidth={2}
+            />
+          )
+        ))}
+      </MapView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 }
+});
