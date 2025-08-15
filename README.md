@@ -15,3 +15,5 @@ Trying to mimic how 9-1-1 decides jurisdiciton.  App provides a non-emergency ph
 npm install --legacy-peer-deps
 
 expo start -c
+
+npmrc file used to auto run things like the legacy code
